@@ -1,0 +1,10 @@
+﻿Build started 2015-07-22 4:21:07 PM.
+     1>Project "D:\projects\HAPI\HAPI\HAPI.vcxproj" on node 2 (ClCompile target(s)).
+     1>ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ID:\FreeImage\FreeImage3160\FreeImage\Dist /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Matrix.cpp
+         Matrix.cpp
+     1>Done Building Project "D:\projects\HAPI\HAPI\HAPI.vcxproj" (ClCompile target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.50

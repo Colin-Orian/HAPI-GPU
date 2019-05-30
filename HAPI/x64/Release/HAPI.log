@@ -1,0 +1,13 @@
+﻿  ComputeInterference.cpp
+d:\projects\hapiex\hapi\computeinterference.cpp(287): warning C4101: 'theta': unreferenced local variable
+d:\projects\hapiex\hapi\computeinterference.cpp(288): warning C4101: 'k1': unreferenced local variable
+d:\projects\hapiex\hapi\computeinterference.cpp(468): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+d:\projects\hapiex\hapi\computeinterference.cpp(771): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%lld' in the format string
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%Id' in the format string
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%I64d' in the format string
+d:\projects\hapiex\hapi\computeinterference.cpp(771): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 2 has type '__int64'
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%lld' in the format string
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%Id' in the format string
+  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%I64d' in the format string
+  HAPI.vcxproj -> D:\projects\HAPIex\x64\Release\HAPI.lib

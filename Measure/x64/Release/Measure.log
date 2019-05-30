@@ -1,0 +1,19 @@
+﻿  main.cpp
+main.cpp(81): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h(1769): note: see declaration of 'sprintf'
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setChannels(int)" (?setChannels@@YAXH@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setTarget(int)" (?setTarget@@YAXH@Z)
+main.obj : error LNK2001: unresolved external symbol "public: void __cdecl TransformationNode::rotateZ(double)" (?rotateZ@TransformationNode@@QEAAXN@Z)
+main.obj : error LNK2001: unresolved external symbol "public: __cdecl TransformationNode::TransformationNode(void)" (??0TransformationNode@@QEAA@XZ)
+main.obj : error LNK2001: unresolved external symbol "double __cdecl getSeconds(void)" (?getSeconds@@YANXZ)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl display(class Node *)" (?display@@YAXPEAVNode@@@Z)
+main.obj : error LNK2001: unresolved external symbol "public: void __cdecl Node::addChild(class Node *)" (?addChild@Node@@QEAAXPEAV1@@Z)
+main.obj : error LNK2001: unresolved external symbol "public: __cdecl Node::Node(int)" (??0Node@@QEAA@H@Z)
+main.obj : error LNK2001: unresolved external symbol "public: void __cdecl GeometryNode::addLine(double,double,double,double,double,double)" (?addLine@GeometryNode@@QEAAXNNNNNN@Z)
+main.obj : error LNK2001: unresolved external symbol "public: __cdecl GeometryNode::GeometryNode(int)" (??0GeometryNode@@QEAA@H@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setWorldSpace(double,double,double,double,double,double)" (?setWorldSpace@@YAXNNNNNN@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setBaseFileName(char *)" (?setBaseFileName@@YAXPEAD@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setDeviceSpace(double,double,double,double,double,double)" (?setDeviceSpace@@YAXNNNNNN@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setAlgorithm(int)" (?setAlgorithm@@YAXH@Z)
+main.obj : error LNK2001: unresolved external symbol "void __cdecl setWavelength(int,double)" (?setWavelength@@YAXHN@Z)
+D:\projects\HAPIex\x64\Release\Measure.exe : fatal error LNK1120: 15 unresolved externals

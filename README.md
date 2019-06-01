@@ -10,4 +10,10 @@ The two external dependencies are jansson and freeimage, you may need to change 
 settings to correctly link to them.
 
 Each program needs a display.halo file which must be in the same directory as the .exe 
-file.  A sample one is included.
+file.  Several sample ones are included.
+
+device.halo - the same as device512.halo
+device512.halo - a 512x512 abstract device, good for testing
+device6500.halo - device file for the LightCrafter 6500 device
+devicelightcrafter.halo - device file for the LightCrafter 3000 device
+deviceSquare.halo - a 1024x1024 abstract device, good for testing

@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ray", "ray\ray.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "angles", "angles\angles.vcxproj", "{F754B086-83AC-4484-979F-7A516538DD41}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "optix", "optix\optix.vcxproj", "{C6FD64DC-A28D-43E2-821C-F8148388F0B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -61,6 +63,14 @@ Global
 		{F754B086-83AC-4484-979F-7A516538DD41}.Release|Win32.Build.0 = Release|Win32
 		{F754B086-83AC-4484-979F-7A516538DD41}.Release|x64.ActiveCfg = Release|x64
 		{F754B086-83AC-4484-979F-7A516538DD41}.Release|x64.Build.0 = Release|x64
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Debug|Win32.Build.0 = Debug|Win32
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Debug|x64.ActiveCfg = Debug|x64
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Debug|x64.Build.0 = Debug|x64
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Release|Win32.ActiveCfg = Release|Win32
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Release|Win32.Build.0 = Release|Win32
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Release|x64.ActiveCfg = Release|x64
+		{C6FD64DC-A28D-43E2-821C-F8148388F0B0}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -200,7 +200,7 @@ void passOne(Node *root, double initialCtm[4][4]) {
 	}
 }
 
-void passTwo(Node *root, InterferencePattern* pattern) {
+void passTwo(Node *root, InterferencePattern* pattern, bool isParallel) {
 	std::stack<Node*> nodeStack;
 	Node *current;
 	int i;
@@ -212,11 +212,12 @@ void passTwo(Node *root, InterferencePattern* pattern) {
 		nodeStack.pop();
 		switch (current->getType()) {
 		case STATICNODE:
-			pat = &((StaticNode*)current)->getInterferencePattern();
-			pattern->add(*pat);
+			pat = &((StaticNode*)current)->getInterferencePattern(); //You don't need to recompute this again. 
+			pattern->add(*pat); 
 			break;
 		case GEOMETRYNODE:
-			computeInterference((GeometryNode*)current, pattern, wavelengths[0], cpx[0], cpy[0], cpz[0]);
+			//render the pattern
+			computeInterference((GeometryNode*)current, pattern, wavelengths[0], cpx[0], cpy[0], cpz[0], isParallel); //render the pattern
 			break;
 		default:
 			for (i = 0; i < current->count(); i++)
@@ -226,7 +227,7 @@ void passTwo(Node *root, InterferencePattern* pattern) {
 }
 
 void traverse(Node *root, InterferencePattern* pattern, double initialCtm[4][4]) {
-
+	bool isParallel = true;
 	/*
 	 *  first pass - convert all the geometry
 	 *  to point light sources
@@ -239,7 +240,7 @@ void traverse(Node *root, InterferencePattern* pattern, double initialCtm[4][4])
 	 *  the interference pattern
 	 */
 	
-	passTwo(root, pattern);
+	passTwo(root, pattern, isParallel);
 
 }
 

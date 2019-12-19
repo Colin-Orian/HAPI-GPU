@@ -12,7 +12,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "helper.h"
-
 extern double pointDistance;
 
 double sizex;	// horizontal distance between mirrors
@@ -66,8 +65,8 @@ void computeInterferenceSP(GeometryNode *node, InterferencePattern *pattern, dou
 void computeInterferenceRS(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
 void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
 void computeInterferenceP(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
-
-void computeInterference(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr) {
+void computeInterferenceParallel(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
+void computeInterference(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr, bool isParallel) {
 	int alg;
 
 	alg = getAlgorithm();
@@ -79,7 +78,13 @@ void computeInterference(GeometryNode *node, InterferencePattern *pattern, doubl
 		computeInterferenceRS(node, pattern, lambda, xr, yr, zr);
 		break;
 	case RAY_TRACE:
-		computeInterferenceRay(node, pattern, lambda, xr, yr, zr);
+		if (isParallel) {
+			computeInterferenceParallel(node, pattern, lambda, xr, yr, zr);
+		}
+		else {
+			computeInterferenceRay(node, pattern, lambda, xr, yr, zr);
+		}
+		
 		break;
 	case COMPLEX_POINT:
 		computeInterferenceP(node, pattern, lambda, xr, yr, zr);
@@ -385,6 +390,10 @@ void computeInterferenceP(GeometryNode *node, InterferencePattern *pattern, doub
 	printf("sqrt: %f %f\n", minSqrt, maxSqrt);
 }
 
+void computeInterferenceParallel(GeometryNode * node, InterferencePattern * pattern, double lambda, double xr, double yr, double zr){
+
+}
+
 
 struct Ray {
 	double ox, oy, oz;
@@ -467,7 +476,7 @@ double trace(GeometryNode *node, struct Ray *ray, double &colour) {
 	clist = node->getColour();
 	n = plist.size();
 	for (i = 0; i < n; i++) {
-		d = sphereIntersect(plist[i]->x, plist[i]->y, plist[i]->z, rlist[i], ray);
+		d = sphereIntersect(plist[i]->x, plist[i]->y, plist[i]->z, rlist[i], ray); //Closest hit program
 		if (d > 0.0) {
 			if (d < t) {
 				t = d;
@@ -719,16 +728,14 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 
 	computeReference(width, height, sizex, sizey, left, -top, 0.1, 0.1, 0.95, 10000.0, k);
 
+//--------------This would be on the GPU ----------
 	for (i = 0; i < width; i++)
 		for (j = 0; j < height; j++)
 			object[i][j] = 0.0;
 
-	for (i = 0; i < width; i++) {
-		
-//		if(i % 10 == 0)
-//		printf("Line %d\n",i);
-		
+	for (i = 0; i < width; i++) {    
 		for (j = 0; j < height; j++) {
+			//For each pixel do this stuff
 			x = left + i*sizex;
 			if (diamond && ((j % 2) == 0))
 				x += sizex / 2.0;;
@@ -749,7 +756,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 					ray.dx = dx / len;
 					ray.dy = dy / len;
 					ray.dz = dz / len;
-					t = trace(node, &ray, colour);
+					t = trace(node, &ray, colour); //Does the ray hit? 
 					if (t < 0) {
 						continue;
 					}
@@ -758,6 +765,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 					object[i][j] += colour*exp(1i*k*t)/t;
 				}
 			}
+
 		}
 	}
 	for (i = 0; i < width; i++) {
@@ -769,4 +777,5 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 	maxInter = xMax*yMax;
 	maxInter = maxInter * width*height;
 	printf("intersections: %ld %ld %f\n", intersections, maxInter, ((double) intersections)/maxInter);
+	//----------- End of GPU code ---------
 }

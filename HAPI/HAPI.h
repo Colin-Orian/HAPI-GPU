@@ -7,11 +7,15 @@
  *******************************************/
 #ifndef _HAPIH
 #define _HAPIH
+#include "ProgramCreator.h"
+#include "SceneTree.h"
+
 #include "Node.h"
 #include "GeometryNode.h"
 #include "TransformationNode.h"
 #include "InterferencePattern.h"
 #include "StaticNode.h"
+#include "Renderer.h"
 
 //  Channels
 
@@ -46,9 +50,10 @@ void setWorldSpace(double x1, double y1, double z1, double x2, double y2, double
 void setDeviceSpace(double x1, double y1, double z1, double x2, double y2, double z2);
 void setAlgorithm(int algorithm);
 int getAlgorithm();
+void passTwo(Node * root, InterferencePattern * pattern, bool isParallel);
 void traverse(Node *tree, InterferencePattern* pattern, double ctm[4][4]);
 void compile(GeometryNode *node, double ctm[4][4]);
-void computeInterference(GeometryNode *node, InterferencePattern* pattern, double lambda, double x, double y, double z);
+void computeInterference(GeometryNode *node, InterferencePattern* pattern, double lambda, double x, double y, double z, bool isParallel);
 void display(Node *root);
 InterferencePattern* display(Node *root, int mode);
 double getSeconds();

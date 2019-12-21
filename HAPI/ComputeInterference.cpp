@@ -66,6 +66,7 @@ void computeInterferenceRS(GeometryNode *node, InterferencePattern *pattern, dou
 void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
 void computeInterferenceP(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
 void computeInterferenceParallel(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr);
+
 void computeInterference(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr, bool isParallel) {
 	int alg;
 
@@ -79,9 +80,11 @@ void computeInterference(GeometryNode *node, InterferencePattern *pattern, doubl
 		break;
 	case RAY_TRACE:
 		if (isParallel) {
+			printf("Computing on GPU");
 			computeInterferenceParallel(node, pattern, lambda, xr, yr, zr);
 		}
 		else {
+			printf("Computing on CPU\n");
 			computeInterferenceRay(node, pattern, lambda, xr, yr, zr);
 		}
 		
@@ -332,7 +335,6 @@ void computeInterferenceP(GeometryNode *node, InterferencePattern *pattern, doub
 	n = plist.size();
 
 	computeReference(width, height, sizex, sizey, left, -top, 0.1, 0.1, 0.95, 10000.0, k);
-
 	printf("n: %zd\n", n);
 	for (i = 0; i < width; i++)
 		for (j = 0; j < height; j++)
@@ -390,9 +392,6 @@ void computeInterferenceP(GeometryNode *node, InterferencePattern *pattern, doub
 	printf("sqrt: %f %f\n", minSqrt, maxSqrt);
 }
 
-void computeInterferenceParallel(GeometryNode * node, InterferencePattern * pattern, double lambda, double xr, double yr, double zr){
-
-}
 
 
 struct Ray {
@@ -471,12 +470,12 @@ double trace(GeometryNode *node, struct Ray *ray, double &colour) {
 	ly /= len;
 	lz /= len;
 
-	plist = node->getLightPoints();
+	plist = node->getLightPoints(); //Buffer for each?
 	rlist = node->getTransRadius();
-	clist = node->getColour();
+	clist = node->getColour(); //result buffer
 	n = plist.size();
-	for (i = 0; i < n; i++) {
-		d = sphereIntersect(plist[i]->x, plist[i]->y, plist[i]->z, rlist[i], ray); //Closest hit program
+	for (i = 0; i < n; i++) { //for each light point, find the closest one that intersects the ray
+		d = sphereIntersect(plist[i]->x, plist[i]->y, plist[i]->z, rlist[i], ray);
 		if (d > 0.0) {
 			if (d < t) {
 				t = d;
@@ -487,7 +486,7 @@ double trace(GeometryNode *node, struct Ray *ray, double &colour) {
 	if (current < 0) {
 		return(-1.0);
 	}
-	nx = ray->ox + t * ray->dx - plist[current]->x;
+	nx = ray->ox + t * ray->dx - plist[current]->x; //Where on the ray is the intersect?
 	ny = ray->oy + t * ray->dy - plist[current]->y;
 	nz = ray->oz + t * ray->dz - plist[current]->z;
 	len = sqrt(nx*nx + ny * ny + nz * nz);
@@ -651,6 +650,149 @@ void sampleJitter(int w, int h, double etaMax, double thetaMax, double width) {
 
 }
 
+
+void computeInterferenceParallel(GeometryNode * node, InterferencePattern * pattern, double lambda, double xr, double yr, double zr) {
+	double left;
+	double top;
+	int i, j;
+	double x, y;
+	double k;
+	double dx, dy, dz;
+	double len;
+	double etaMax;
+	double thetaMax;
+	double deta;
+	double dtheta;
+	int xMax;
+	int yMax;
+	Device *device;
+	int diamond;
+	int m, n;
+	struct Ray ray;
+	double t;
+	long long int intersections = 0;
+	long long int maxInter;
+	//	struct Angles samples[1000][1000];
+	double colour;
+	double intens;
+	double d;
+	double rho;
+	int rx, ry;
+	double hi, lo;
+
+	device = pattern->getDevice();
+	sizex = device->sizeWide();
+	sizey = device->sizeHeight();
+	width = device->pixelsWidth();
+	height = device->pixelsHeight();
+	diamond = (int)device->diamond();
+
+	etaMax = asin(lambda / (2 * sizex));
+	thetaMax = asin(lambda / (2 * sizey));
+
+	rho = getrho();
+	d = sizex / (2 * tan(rho*etaMax));
+	printf("d: %f\n", d);
+
+	left = -width / 2 * sizex;
+	top = height / 2 * sizey;
+	k = 2 * M_PI / lambda;
+
+	getres(rx, ry);
+	xMax = rx;
+	yMax = ry;
+	deta = 2 * etaMax / (xMax - 1);
+	dtheta = 2 * thetaMax / (yMax - 1);
+	printf("Angles: %f %f %f %f\n", etaMax, thetaMax, deta, dtheta);
+
+	sampleJitter(xMax, yMax, etaMax, thetaMax, rho);
+
+	lo = left + samples[0][0].x * 80000;
+	hi = -left + samples[xMax - 1][0].x * 80000;
+	printf("width: %f %f %f\n", lo, hi, hi - lo);
+
+	computeReference(width, height, sizex, sizey, left, -top, 0.1, 0.1, 0.95, 10000.0, k);
+
+	//Setting up Optix
+	int rayCount = 1;
+	int entryPoint = 1;
+	std::string outputBuffer = "result_buffer";
+	Renderer renderer(width, height, rayCount, entryPoint, 800);
+	ProgramCreator programCreator(renderer.getContext());
+	renderer.createBuffer(outputBuffer);
+	programCreator.createRaygenProgram("ray_generation.ptx", "rayGeneration", 0);
+	programCreator.createMissProgram("miss.ptx", "miss", 0);
+
+	/*
+	optix::Program boundBox = programCreator.createProgram("bounding_box.ptx", "boundbox_sphere");
+	optix::Program intersectProg = programCreator.createProgram("intersection.ptx", "intersect_sphere");
+	optix::Program closeHitProg = programCreator.createProgram("closest_hit.ptx", "closestHit");
+	*/
+	programCreator.createProgramVariable1f("rayGeneration", "left", (float)left);
+	programCreator.createProgramVariable1f("rayGeneration", "top", (float)top);
+	programCreator.createProgramVariable1f("rayGeneration", "sizex", (float)sizex);
+	programCreator.createProgramVariable1f("rayGeneration", "sizey", (float)sizey);
+	programCreator.createProgramVariable1i("rayGeneration", "diamond", diamond);
+	programCreator.createProgramVariable1f("rayGeneration", "camDist", (float)d);
+		
+	optix::Geometry sphere;
+	sphere = renderer.getContext()->createGeometry();
+	optix::Buffer pointBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
+
+	pointBuffer->setElementSize(sizeof(node->getLightPoints()[0]));
+	pointBuffer->setSize(node->getLightPoints().size());
+	void* pointLoc = pointBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
+	memcpy(pointLoc, node->getLightPoints().data(), sizeof(node->getLightPoints()[0]) * node->getLightPoints().size());
+	pointBuffer->unmap();
+	
+	optix::Buffer radiusBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
+	radiusBuffer->setElementSize(sizeof(double));
+	radiusBuffer->setSize(node->getTransRadius().size());
+	void* radiusLoc = radiusBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
+	memcpy(radiusLoc, node->getTransRadius().data(), sizeof(double) * node->getLightPoints().size());
+	radiusBuffer->unmap();
+	
+	/*
+	sphere->setBoundingBoxProgram(boundBox);
+	sphere->setIntersectionProgram(intersectProg);
+	sphere["radiusBuffer"]->setBuffer(radiusBuffer);
+	sphere["pointBuffer"]->setBuffer(pointBuffer);
+	sphere->setPrimitiveCount(node->getLightPoints().size());
+
+	optix::Material material = renderer.getContext()->createMaterial();
+	material->setClosestHitProgram(0, closeHitProg);
+	
+	optix::GeometryInstance sphereInstance = renderer.getContext()->createGeometryInstance();
+	sphereInstance->setGeometry(sphere);
+	sphereInstance->setMaterialCount(1);
+	sphereInstance->setMaterial(0, material);*/
+	
+	optix::Acceleration acceleration = renderer.getContext()->createAcceleration("Trbvh");
+	optix::GeometryGroup group = renderer.getContext()->createGeometryGroup();
+	group->setAcceleration(acceleration);
+	group->setChildCount(1);
+	//group->setChild(0, sphereInstance);
+
+	renderer.render(0);
+	//sutil uses argc and argv. Make some garbage data so sutil works
+	int value = 1;
+	int* num = new int;
+	num = &value;
+	char* character = new char;
+	char** letter = new char*;
+	letter = &character;
+
+	
+	renderer.display(num, letter, outputBuffer);
+	printf("Jitter buffer finished\n");
+	delete character;
+	delete letter;
+	delete num;
+	renderer.cleanUp();
+
+}
+
+
 void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, double lambda, double xr, double yr, double zr) {
 	double left;
 	double top;
@@ -704,7 +846,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 	deta = 2*etaMax / (xMax-1);
 	dtheta = 2 * thetaMax / (yMax-1);
 	printf("Angles: %f %f %f %f\n", etaMax, thetaMax, deta, dtheta);
-
+	printf("xmax: %zd ymax: %zd\n", xMax, yMax);
 	/*
 	for (i = 0; i < xMax; i++) {
 		for (j = 0; j < yMax; j++) {
@@ -727,12 +869,13 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 	printf("width: %f %f %f\n", lo, hi, hi - lo);
 
 	computeReference(width, height, sizex, sizey, left, -top, 0.1, 0.1, 0.95, 10000.0, k);
+	printf("Finished Reference\n");
+//--------------This would be on the GPU ----------//
 
-//--------------This would be on the GPU ----------
 	for (i = 0; i < width; i++)
 		for (j = 0; j < height; j++)
 			object[i][j] = 0.0;
-
+	
 	for (i = 0; i < width; i++) {    
 		for (j = 0; j < height; j++) {
 			//For each pixel do this stuff
@@ -743,7 +886,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 			/*
 			*  diffraction pattern computation
 			*/
-
+			
 			ray.ox = x;
 			ray.oy = y;
 			ray.oz = -d;
@@ -757,6 +900,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 					ray.dy = dy / len;
 					ray.dz = dz / len;
 					t = trace(node, &ray, colour); //Does the ray hit? 
+					
 					if (t < 0) {
 						continue;
 					}

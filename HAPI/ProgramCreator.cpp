@@ -60,6 +60,11 @@ void ProgramCreator::createProgramVariable3f(std::string programName, std::strin
 	context[variableName]->setFloat(x, y, z);
 }
 
+void ProgramCreator::createProgramVariable1f(std::string programName, std::string variableName, float x){
+	context[variableName]->setFloat(x);
+}
+
+
 void ProgramCreator::createProgramVariable1i(std::string programName, std::string variableName, int x) {
 	context[variableName]->setInt(x);
 }

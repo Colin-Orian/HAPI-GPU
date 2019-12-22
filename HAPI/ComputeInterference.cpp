@@ -507,7 +507,7 @@ struct Angles {
 };
 
 struct Angles samples[1024][1024];
-
+//struct Angles samples[99][99];
 void samplePower(int w, int h, double etaMax, double thetaMax, double width, double p) {
 	int i, j;
 	double deta;
@@ -720,6 +720,7 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	int entryPoint = 1;
 	std::string outputBuffer = "result_buffer";
 	Renderer renderer(width, height, rayCount, entryPoint, 800);
+	renderer.getContext()->setPrintEnabled(false); //Allow printing from the GPU
 	ProgramCreator programCreator(renderer.getContext());
 	renderer.createBuffer(outputBuffer);
 	programCreator.createRaygenProgram("ray_generation.ptx", "rayGeneration", 0);
@@ -736,6 +737,9 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	programCreator.createProgramVariable1f("rayGeneration", "sizey", (float)sizey);
 	programCreator.createProgramVariable1i("rayGeneration", "diamond", diamond);
 	programCreator.createProgramVariable1f("rayGeneration", "camDist", (float)d);
+
+	programCreator.createProgramVariable1i("rayGeneration", "xMax", xMax);
+	programCreator.createProgramVariable1i("rayGeneration", "yMax", yMax);
 		
 	optix::Geometry sphere;
 	sphere = renderer.getContext()->createGeometry();
@@ -755,11 +759,17 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	radiusBuffer->unmap();
 	
 	//angles is x and y size = 1024
+	std::vector<Angles> jitterData;
+	for (int i = 0; i < xMax; i++) {
+		for (int j = 0; j < yMax; j++) {
+			jitterData.push_back(samples[i][j]);
+		}
+	}
 	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
 	jitterBuffer->setElementSize(sizeof(Angles));
 	jitterBuffer->setSize(xMax * yMax);
 	void* jitterLoc = jitterBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(jitterLoc, samples, sizeof(Angles)*(xMax * yMax));
+	memcpy(jitterLoc, jitterData.data(), sizeof(Angles)*(xMax * yMax));
 	jitterBuffer->unmap();
 	renderer.getContext()["jitter_buffer"]->setBuffer(jitterBuffer);
 

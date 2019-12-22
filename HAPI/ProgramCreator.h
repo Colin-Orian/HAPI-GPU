@@ -24,5 +24,6 @@ public:
 
 	/*Sets a variable in the given program. Very similiar to Uniform variables in OpenGL*/
 	void createProgramVariable3f(std::string programName, std::string variableName, float x, float y, float z);
+	void createProgramVariable1f(std::string programName, std::string variableName, float x);
 	void createProgramVariable1i(std::string programName, std::string variableName, int x);
 };

@@ -13,9 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="CUDA_Code">
+      <UniqueIdentifier>{db86fcbc-fc1a-4344-8f17-774dee3f7b7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="ray_generation.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
+    <None Include="bounding_box.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
+    <None Include="intersection.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
+    <None Include="closest_hit.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
+    <None Include="miss.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Node.h">

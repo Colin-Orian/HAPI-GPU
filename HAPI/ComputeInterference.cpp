@@ -645,6 +645,8 @@ void sampleJitter(int w, int h, double etaMax, double thetaMax, double width) {
 		for (j = 0; j < h; j++) {
 			samples[i][j].x += scalex*u1(gen);
 			samples[i][j].y += scaley*u2(gen);
+
+			
 		}
 	}
 
@@ -752,6 +754,15 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	memcpy(radiusLoc, node->getTransRadius().data(), sizeof(double) * node->getLightPoints().size());
 	radiusBuffer->unmap();
 	
+	//angles is x and y size = 1024
+	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
+	jitterBuffer->setElementSize(sizeof(Angles));
+	jitterBuffer->setSize(xMax * yMax);
+	void* jitterLoc = jitterBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
+	memcpy(jitterLoc, samples, sizeof(Angles)*(xMax * yMax));
+	jitterBuffer->unmap();
+	renderer.getContext()["jitter_buffer"]->setBuffer(jitterBuffer);
+
 	/*
 	sphere->setBoundingBoxProgram(boundBox);
 	sphere->setIntersectionProgram(intersectProg);

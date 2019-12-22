@@ -1,8 +1,11 @@
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-#include <curand_kernel.h> //created uniform numbers https://stackoverflow.com/questions/24537112/uniformly-distributed-pseudorandom-integers-inside-cuda-kernel
+struct Angle {
+	double x;
+	double y;
+};
 rtBuffer<float4, 2> result_buffer;
-
+rtBuffer<Angle, 1> jitter_buffer;
 rtDeclareVariable(uint2, theLaunchDim, rtLaunchDim, );
 rtDeclareVariable(uint2, theLaunchIndex, rtLaunchIndex, );
 
@@ -15,9 +18,6 @@ rtDeclareVariable(float, sizey, ,);
 rtDeclareVariable(float, camDist, , );
 rtDeclareVariable(int, diamond, ,);
 
-void sampleJitter(int i, int j) {
-//	curand_init();
-}
 
 RT_PROGRAM void rayGeneration() {
 	double x = left + theLaunchIndex.x * sizex;
@@ -29,6 +29,6 @@ RT_PROGRAM void rayGeneration() {
 	currentRay.origin.x;
 	currentRay.origin.y = y;
 	currentRay.origin.z = -camDist;
-
-	result_buffer[theLaunchIndex] = make_float4(theLaunchIndex.x, theLaunchIndex.y, 0.0f, 1.0f);
+	
+	result_buffer[theLaunchIndex] = make_float4(1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 }

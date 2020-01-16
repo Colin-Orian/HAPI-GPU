@@ -80,7 +80,7 @@ void computeInterference(GeometryNode *node, InterferencePattern *pattern, doubl
 		break;
 	case RAY_TRACE:
 		if (isParallel) {
-			printf("Computing on GPU");
+			printf("Computing on GPU\n");
 			computeInterferenceParallel(node, pattern, lambda, xr, yr, zr);
 		}
 		else {
@@ -618,11 +618,12 @@ void sampleJitter(int w, int h, double etaMax, double thetaMax, double width) {
 	int midy;
 	std::random_device rd;
 	std::mt19937 gen(rd());
+	//std::mt19937 gen(1); //Used if I want numbers to remain the same each execution
 	std::uniform_real_distribution<> u1(-1.0, 1.0);
 	std::uniform_real_distribution<> u2(-1.0, 1.0);
 	double scalex, scaley;
 	double noise;
-
+	
 	midx = w / 2;
 	midy = h / 2;
 	deta = 2 * width*etaMax / (w - 1);
@@ -720,17 +721,23 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	int entryPoint = 1;
 	std::string outputBuffer = "result_buffer";
 	Renderer renderer(width, height, rayCount, entryPoint, 800);
-	renderer.getContext()->setPrintEnabled(false); //Allow printing from the GPU
+	//renderer.getContext()->setPrintEnabled(false); //Allow printing from the GPU
+	renderer.getContext()->setExceptionEnabled(RT_EXCEPTION_ALL, false);
+	optix::Acceleration rootAcceleration = renderer.getContext()->createAcceleration("Trbvh");
+	optix::Group rootGroup = renderer.getContext()->createGroup();
+	rootGroup->setAcceleration(rootAcceleration);
+
+	renderer.getContext()["sysTopObject"]->set(rootGroup);
 	ProgramCreator programCreator(renderer.getContext());
 	renderer.createBuffer(outputBuffer);
 	programCreator.createRaygenProgram("ray_generation.ptx", "rayGeneration", 0);
 	programCreator.createMissProgram("miss.ptx", "miss", 0);
-
-	/*
+	programCreator.createExceptionProgram("exception.ptx", "exception", 0);
+	
 	optix::Program boundBox = programCreator.createProgram("bounding_box.ptx", "boundbox_sphere");
 	optix::Program intersectProg = programCreator.createProgram("intersection.ptx", "intersect_sphere");
 	optix::Program closeHitProg = programCreator.createProgram("closest_hit.ptx", "closestHit");
-	*/
+
 	programCreator.createProgramVariable1f("rayGeneration", "left", (float)left);
 	programCreator.createProgramVariable1f("rayGeneration", "top", (float)top);
 	programCreator.createProgramVariable1f("rayGeneration", "sizex", (float)sizex);
@@ -744,20 +751,32 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	optix::Geometry sphere;
 	sphere = renderer.getContext()->createGeometry();
 	optix::Buffer pointBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
-
-	pointBuffer->setElementSize(sizeof(node->getLightPoints()[0]));
-	pointBuffer->setSize(node->getLightPoints().size());
+	std::vector<Point> pointVector;
+	for (Point* point : node->getLightPoints()) {
+		double x = point->x;
+		double y = point->y;
+		double z = point->z;
+		Point temp;
+		temp.x = x;
+		temp.y = y;
+		temp.z = z;
+		pointVector.push_back(temp);
+	}
+	pointBuffer->setElementSize(sizeof(pointVector[0]));
+	pointBuffer->setSize(pointVector.size());
 	void* pointLoc = pointBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(pointLoc, node->getLightPoints().data(), sizeof(node->getLightPoints()[0]) * node->getLightPoints().size());
+	memcpy(pointLoc, pointVector.data(), sizeof(pointVector[0]) * pointVector.size());
 	pointBuffer->unmap();
-	
+
 	optix::Buffer radiusBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
 	radiusBuffer->setElementSize(sizeof(double));
 	radiusBuffer->setSize(node->getTransRadius().size());
 	void* radiusLoc = radiusBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
 	memcpy(radiusLoc, node->getTransRadius().data(), sizeof(double) * node->getLightPoints().size());
 	radiusBuffer->unmap();
-	
+	printf("xMax = %i, yMax = %i\n", xMax, yMax);
+	int checkX = 0;
+	int checkY = 0;
 	//angles is x and y size = 1024
 	std::vector<Angles> jitterData;
 	for (int i = 0; i < xMax; i++) {
@@ -765,15 +784,19 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 			jitterData.push_back(samples[i][j]);
 		}
 	}
-	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
+	printf("top = %f, left = %f, diamond = %f\n", top, left, diamond);
+	printf("-----------\n");
+	programCreator.createProgramVariable1i("rayGeneration", "checkX", checkX);
+	programCreator.createProgramVariable1i("rayGeneration", "checkY", checkY);
+	programCreator.createProgramVariable1f("rayGeneration", "k", k);
+	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, xMax, yMax);
 	jitterBuffer->setElementSize(sizeof(Angles));
-	jitterBuffer->setSize(xMax * yMax);
+	jitterBuffer->setSize(xMax,yMax);
 	void* jitterLoc = jitterBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
 	memcpy(jitterLoc, jitterData.data(), sizeof(Angles)*(xMax * yMax));
 	jitterBuffer->unmap();
 	renderer.getContext()["jitter_buffer"]->setBuffer(jitterBuffer);
-
-	/*
+	
 	sphere->setBoundingBoxProgram(boundBox);
 	sphere->setIntersectionProgram(intersectProg);
 	sphere["radiusBuffer"]->setBuffer(radiusBuffer);
@@ -782,19 +805,23 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 
 	optix::Material material = renderer.getContext()->createMaterial();
 	material->setClosestHitProgram(0, closeHitProg);
-	
+
 	optix::GeometryInstance sphereInstance = renderer.getContext()->createGeometryInstance();
 	sphereInstance->setGeometry(sphere);
 	sphereInstance->setMaterialCount(1);
-	sphereInstance->setMaterial(0, material);*/
+	sphereInstance->setMaterial(0, material);
 	
 	optix::Acceleration acceleration = renderer.getContext()->createAcceleration("Trbvh");
 	optix::GeometryGroup group = renderer.getContext()->createGeometryGroup();
 	group->setAcceleration(acceleration);
 	group->setChildCount(1);
-	//group->setChild(0, sphereInstance);
+	group->setChild(0, sphereInstance);
 
+	rootGroup->setChildCount(1);
+	rootGroup->setChild(0, group);
+	printf("rendering\n");
 	renderer.render(0);
+	printf("rendering complete! :D\n");
 	//sutil uses argc and argv. Make some garbage data so sutil works
 	int value = 1;
 	int* num = new int;

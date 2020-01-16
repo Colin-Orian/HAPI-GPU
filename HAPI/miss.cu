@@ -1,10 +1,12 @@
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
+struct Payload {
+	float3 colour;
+	double diff;
 
-rtBuffer<float4, 2> result_buffer;
-
-rtDeclareVariable(uint2, theLaunchIndex, rtLaunchIndex,);
-//On the closest hit, make the pixel red
+};
+rtDeclareVariable(Payload, payload, rtPayload, );
+//On a miss, make the pixel green
 RT_PROGRAM void miss() {
-	result_buffer[theLaunchIndex] = make_float4(0.0f, 0.0f, 1.0f, 1.0f);
+	payload.colour += make_float3(0.0f, 0.0f, 0.0f);
 }

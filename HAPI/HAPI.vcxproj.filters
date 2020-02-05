@@ -34,6 +34,12 @@
     <None Include="miss.cu">
       <Filter>CUDA_Code</Filter>
     </None>
+    <None Include="exception.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
+    <None Include="any_hit.cu">
+      <Filter>CUDA_Code</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Node.h">

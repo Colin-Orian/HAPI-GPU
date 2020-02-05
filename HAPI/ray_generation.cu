@@ -1,7 +1,7 @@
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
 #include <stdio.h>
-#include <complex>
+#include <thrust/complex.h>
 struct Angle {
 	double x;
 	double y;
@@ -21,6 +21,7 @@ struct Payload {
 
 rtBuffer<float4, 2> result_buffer;
 rtBuffer<Angle, 2> jitter_buffer;
+rtBuffer<Angle, 2 > reference_buffer;
 
 rtDeclareVariable(uint2, theLaunchDim, rtLaunchDim, );
 rtDeclareVariable(uint2, theLaunchIndex, rtLaunchIndex, );
@@ -38,19 +39,47 @@ rtDeclareVariable(int, yMax, , );
 rtDeclareVariable(int, checkX, , );
 rtDeclareVariable(int, checkY, , );
 rtDeclareVariable(float, k, , );
-static __device__ __inline__
-int twoDtoOne(int i, int j) {
-	return j + yMax * i;
+
+//static __device__ __inline__
+//int twoDtoOne(int i, int j) {
+	//return j + yMax * i;
+//}
+
+/*
+int i, j;
+double x, y;
+double xx;
+
+for (i = 0; i < sx; i++) {
+	x = i * dx + ox;
+	xx = x * nx;
+	for (j = 0; j < sy; j++) {
+		y = j * dy + oy;
+		reference[i][j] = exp(1i*k*(xx + y * ny + nz * z));
+	}
 }
+*/
 static __device__ __inline__
-void printRay(optix::Ray ray) {
-	printf("ox = %f, oy = %f, oz = %f, dx = %f, dy = %f, dz = %f\n",ray.origin.x, ray.origin.y, ray.origin.z,  ray.direction.x, ray.direction.y, ray.direction.z);
-	
+thrust::complex<float> computeReference() {
+	double nx = 0.1;
+	double ny = 0.1;
+	double nz = 0.95;
+	double z = 100000.0;
+	float3 pos;
+	pos.x = theLaunchIndex.x * sizex + left;
+	pos.y = theLaunchIndex.y * sizey - top;
+	pos.z = z;
+	float3 nVal;
+	nVal.x = nx;
+	nVal.y = ny;
+	nVal.z = nz;
+	thrust::complex<float> number(0.0f,k * optix::dot(pos, nVal));
+	return thrust::exp<float>(number);
 }
 
 RT_PROGRAM void rayGeneration() {
 	double x = left + theLaunchIndex.x * sizex;
-	if (diamond && (theLaunchIndex.y % 2) == 0) {
+	if (diamond && ((theLaunchIndex.y % 2) == 0)) {
 		x += sizex / 2.0f;
 	}
 	//If diamond is true and the j th index is even, add sizex / 2.0f to x. Turned it into a equation for better performance
@@ -59,9 +88,19 @@ RT_PROGRAM void rayGeneration() {
 	double y = top - theLaunchIndex.y * sizey;
 
 	Payload payload;
-	payload.colour = make_float3(0.0f);
-	int checkIndex = twoDtoOne(checkX, checkY);	
+	payload.colour = make_float3(0.0f);	
 	float3 resultColour;
+	
+	//Compute the reference of the sphere
+	thrust::complex<double> reference((float)reference_buffer[theLaunchIndex].x, (float)reference_buffer[theLaunchIndex].y);
+	//NOTE: thrust::complex example(realNumber, ImagNumber);
+	thrust::complex<double> finalComplex(0.0, 0.0);
+
+	optix::Ray currentRay;
+	currentRay.origin.x = x;
+	currentRay.origin.y = y;
+	currentRay.origin.z = -camDist;
+	currentRay.tmax = RT_DEFAULT_MAX;
 	for (int i = 0; i < xMax; i++) {
 		for (int j = 0; j < yMax; j++) {
 			uint2 index;
@@ -73,20 +112,28 @@ RT_PROGRAM void rayGeneration() {
 			double dz = 1.0;
 			double len = sqrt(dx*dx + dy * dy + dz * dz);
 
-			optix::Ray currentRay;
 			
-			currentRay.origin.x = x;
-			currentRay.origin.y = y;
-			currentRay.origin.z = -camDist;
+			
 			currentRay.direction.x = dx / len;
 			currentRay.direction.y = dy / len;
 			currentRay.direction.z = dz / len;
-			currentRay.tmax = RT_DEFAULT_MAX;
-			rtTrace(sysTopObject, currentRay, payload);
 			
-			resultColour = payload.colour * exp(1 * k * payload.t) / payload.t;
-			//payload.colour = make_float3(0.0f);
+			rtTrace(sysTopObject, currentRay, payload);
+			if (payload.t >= 0.0) {
+				
+				payload.t -= camDist;
+				//thrust::complex<float> complexNum(0.0, (float)(k * payload.t));
+				//complexNum = thrust::exp<float>(complexNum);
+				//complexNum *= thrust::complex<float>((float)payload.colour.x,0.0);
+				//complexNum /= thrust::complex <float> ((float)payload.t, 0.0);
+				thrust::complex<float> complexNum = thrust::complex<float>((float)payload.colour.x, 0.0);
+				finalComplex = complexNum;
+			}
+			
 		}
 	}
-	result_buffer[theLaunchIndex] = make_float4(resultColour.x,resultColour.y,resultColour.z, 1.0f);
+	finalComplex *= thrust::conj<float>(reference);
+	resultColour = make_float3((float)thrust::abs(finalComplex));
+	result_buffer[theLaunchIndex] = make_float4(1.0 - resultColour.x,1.0 -resultColour.y,1.0 -resultColour.z, 1.0f);
+	
 }

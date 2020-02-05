@@ -1,1 +1,1 @@
-nvcc  -ptx -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.14.26428\bin\Hostx64\x64" -I "C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\include" %1
+nvcc -arch sm_30 -ptx -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.14.26428\bin\Hostx64\x64" -I "C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\include" %1

@@ -715,14 +715,14 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	printf("width: %f %f %f\n", lo, hi, hi - lo);
 
 	computeReference(width, height, sizex, sizey, left, -top, 0.1, 0.1, 0.95, 10000.0, k);
-
+	
 	//Setting up Optix
 	int rayCount = 1;
 	int entryPoint = 1;
 	std::string outputBuffer = "result_buffer";
 	Renderer renderer(width, height, rayCount, entryPoint, 800);
-	//renderer.getContext()->setPrintEnabled(false); //Allow printing from the GPU
-	renderer.getContext()->setExceptionEnabled(RT_EXCEPTION_ALL, false);
+	renderer.getContext()->setPrintEnabled(true); //Allow printing from the GPU
+	renderer.getContext()->setExceptionEnabled(RT_EXCEPTION_ALL, true);
 	optix::Acceleration rootAcceleration = renderer.getContext()->createAcceleration("Trbvh");
 	optix::Group rootGroup = renderer.getContext()->createGroup();
 	rootGroup->setAcceleration(rootAcceleration);
@@ -744,7 +744,7 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	programCreator.createProgramVariable1f("rayGeneration", "sizey", (float)sizey);
 	programCreator.createProgramVariable1i("rayGeneration", "diamond", diamond);
 	programCreator.createProgramVariable1f("rayGeneration", "camDist", (float)d);
-
+	programCreator.createProgramVariable1f("rayGeneration", "k", k);
 	programCreator.createProgramVariable1i("rayGeneration", "xMax", xMax);
 	programCreator.createProgramVariable1i("rayGeneration", "yMax", yMax);
 		
@@ -774,6 +774,14 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	void* radiusLoc = radiusBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
 	memcpy(radiusLoc, node->getTransRadius().data(), sizeof(double) * node->getLightPoints().size());
 	radiusBuffer->unmap();
+
+	optix::Buffer colourBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
+	colourBuffer->setElementSize(sizeof(double));
+	colourBuffer->setSize(node->getColour().size());
+	void* colourLoc = colourBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
+	memcpy(colourLoc, node->getColour().data(), sizeof(double) * node->getColour().size());
+	colourBuffer->unmap();
+
 	printf("xMax = %i, yMax = %i\n", xMax, yMax);
 	int checkX = 0;
 	int checkY = 0;
@@ -784,23 +792,43 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 			jitterData.push_back(samples[i][j]);
 		}
 	}
-	printf("top = %f, left = %f, diamond = %f\n", top, left, diamond);
-	printf("-----------\n");
-	programCreator.createProgramVariable1i("rayGeneration", "checkX", checkX);
-	programCreator.createProgramVariable1i("rayGeneration", "checkY", checkY);
-	programCreator.createProgramVariable1f("rayGeneration", "k", k);
+	
 	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, xMax, yMax);
 	jitterBuffer->setElementSize(sizeof(Angles));
-	jitterBuffer->setSize(xMax,yMax);
+	jitterBuffer->setSize(xMax, yMax);
 	void* jitterLoc = jitterBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
 	memcpy(jitterLoc, jitterData.data(), sizeof(Angles)*(xMax * yMax));
 	jitterBuffer->unmap();
 	renderer.getContext()["jitter_buffer"]->setBuffer(jitterBuffer);
+
+	std::vector<Angles> referenceData;
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
+			Angles temp;
+			temp.x = reference[i][j].real();
+			temp.y = reference[i][j].imag();
+			referenceData.push_back(temp);
+		}
+	}
+	
+	optix::Buffer referenceBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, width, height);
+	referenceBuffer->setElementSize(sizeof(Angles));
+	referenceBuffer->setSize(width, height);
+	void* referenceLoc = referenceBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
+	memcpy(referenceLoc, referenceData.data(), sizeof(Angles)*(width * height));
+	referenceBuffer->unmap();
+	renderer.getContext()["reference_buffer"]->setBuffer(referenceBuffer);
+	printf("colour =%f\n", node->getColour()[0]);
+	printf("-----------\n");
+	programCreator.createProgramVariable1i("rayGeneration", "checkX", checkX);
+	programCreator.createProgramVariable1i("rayGeneration", "checkY", checkY);
+	
 	
 	sphere->setBoundingBoxProgram(boundBox);
 	sphere->setIntersectionProgram(intersectProg);
 	sphere["radiusBuffer"]->setBuffer(radiusBuffer);
 	sphere["pointBuffer"]->setBuffer(pointBuffer);
+	sphere["colour_buffer"]->setBuffer(colourBuffer);
 	sphere->setPrimitiveCount(node->getLightPoints().size());
 
 	optix::Material material = renderer.getContext()->createMaterial();
@@ -955,6 +983,9 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 					intersections++;
 					t -= d;
 					object[i][j] += colour*exp(1i*k*t)/t;
+					if (i == 100 && j == 100) {
+						std::cout << object[i][j] << std::endl;
+					}
 				}
 			}
 

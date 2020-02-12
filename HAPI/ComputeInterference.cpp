@@ -850,20 +850,19 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	printf("rendering\n");
 	renderer.render(0);
 	printf("rendering complete! :D\n");
-	//sutil uses argc and argv. Make some garbage data so sutil works
-	int value = 1;
-	int* num = new int;
-	num = &value;
-	char* character = new char;
-	char** letter = new char*;
-	letter = &character;
 
+
+	void* outputData = renderer.getContext()[outputBuffer]->getBuffer()->map();
+	float* mappedData = new float[4*width*height];
+	memcpy(mappedData, outputData, sizeof(float)*4 * width * height);
+	renderer.getContext()[outputBuffer]->getBuffer()->unmap();
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
+			pattern->add(i, j, mappedData[width * j * 4 + i * 4]);
+		}
+		
+	}
 	
-	renderer.display(num, letter, outputBuffer);
-	printf("Jitter buffer finished\n");
-	delete character;
-	delete letter;
-	delete num;
 	renderer.cleanUp();
 
 }

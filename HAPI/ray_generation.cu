@@ -101,6 +101,8 @@ RT_PROGRAM void rayGeneration() {
 	currentRay.origin.y = y;
 	currentRay.origin.z = -camDist;
 	currentRay.tmax = RT_DEFAULT_MAX;
+	float3 dirTotal = make_float3(0.0f);
+
 	for (int i = 0; i < xMax; i++) {
 		for (int j = 0; j < yMax; j++) {
 			uint2 index;
@@ -122,18 +124,19 @@ RT_PROGRAM void rayGeneration() {
 			if (payload.t >= 0.0) {
 				
 				payload.t -= camDist;
-				//thrust::complex<float> complexNum(0.0, (float)(k * payload.t));
-				//complexNum = thrust::exp<float>(complexNum);
-				//complexNum *= thrust::complex<float>((float)payload.colour.x,0.0);
-				//complexNum /= thrust::complex <float> ((float)payload.t, 0.0);
-				thrust::complex<float> complexNum = thrust::complex<float>((float)payload.colour.x, 0.0);
-				finalComplex = complexNum;
+				thrust::complex<float> complexNum(0.0, (float)(k * payload.t));
+				complexNum = thrust::exp<float>(complexNum);
+				complexNum *= thrust::complex<float>((float)payload.colour.x,0.0);
+				complexNum /= thrust::complex <float> ((float)payload.t, 0.0);
+				
+				finalComplex += complexNum;
+				
 			}
-			
 		}
 	}
+	
 	finalComplex *= thrust::conj<float>(reference);
 	resultColour = make_float3((float)thrust::abs(finalComplex));
-	result_buffer[theLaunchIndex] = make_float4(1.0 - resultColour.x,1.0 -resultColour.y,1.0 -resultColour.z, 1.0f);
+	result_buffer[theLaunchIndex] = make_float4(resultColour.x,resultColour.y,resultColour.z, 1.0f);
 	
 }

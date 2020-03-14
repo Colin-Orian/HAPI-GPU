@@ -719,6 +719,7 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	//Setting up Optix
 	int rayCount = 1;
 	int entryPoint = 1;
+
 	std::string outputBuffer = "result_buffer";
 	Renderer renderer(width, height, rayCount, entryPoint, 800);
 	renderer.getContext()->setPrintEnabled(true); //Allow printing from the GPU
@@ -726,10 +727,10 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	optix::Acceleration rootAcceleration = renderer.getContext()->createAcceleration("Trbvh");
 	optix::Group rootGroup = renderer.getContext()->createGroup();
 	rootGroup->setAcceleration(rootAcceleration);
-
 	renderer.getContext()["sysTopObject"]->set(rootGroup);
 	ProgramCreator programCreator(renderer.getContext());
-	renderer.createBuffer(outputBuffer);
+
+	
 	programCreator.createRaygenProgram("ray_generation.ptx", "rayGeneration", 0);
 	programCreator.createMissProgram("miss.ptx", "miss", 0);
 	programCreator.createExceptionProgram("exception.ptx", "exception", 0);
@@ -747,7 +748,28 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	programCreator.createProgramVariable1f("rayGeneration", "k", k);
 	programCreator.createProgramVariable1i("rayGeneration", "xMax", xMax);
 	programCreator.createProgramVariable1i("rayGeneration", "yMax", yMax);
-		
+	
+
+	renderer.createBuffer(outputBuffer, 0);
+	std::vector<Angles> jitterData;
+	for (int i = 0; i < xMax; i++) {
+		for (int j = 0; j < yMax; j++) {
+			jitterData.push_back(samples[i][j]);
+		}
+	}
+	renderer.createInputBuffer<Angles>("jitter_buffer", jitterData, xMax, yMax);
+
+	std::vector<Angles> referenceData;
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
+			Angles temp;
+			temp.x = reference[i][j].real();
+			temp.y = reference[i][j].imag();
+			referenceData.push_back(temp);
+		}
+	}
+	renderer.createInputBuffer<Angles>("reference_buffer", referenceData, width, height);
+
 	optix::Geometry sphere;
 	sphere = renderer.getContext()->createGeometry();
 	optix::Buffer pointBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
@@ -762,75 +784,13 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 		temp.z = z;
 		pointVector.push_back(temp);
 	}
-	pointBuffer->setElementSize(sizeof(pointVector[0]));
-	pointBuffer->setSize(pointVector.size());
-	void* pointLoc = pointBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(pointLoc, pointVector.data(), sizeof(pointVector[0]) * pointVector.size());
-	pointBuffer->unmap();
 
-	optix::Buffer radiusBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
-	radiusBuffer->setElementSize(sizeof(double));
-	radiusBuffer->setSize(node->getTransRadius().size());
-	void* radiusLoc = radiusBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(radiusLoc, node->getTransRadius().data(), sizeof(double) * node->getLightPoints().size());
-	radiusBuffer->unmap();
-
-	optix::Buffer colourBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
-	colourBuffer->setElementSize(sizeof(double));
-	colourBuffer->setSize(node->getColour().size());
-	void* colourLoc = colourBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(colourLoc, node->getColour().data(), sizeof(double) * node->getColour().size());
-	colourBuffer->unmap();
-
-	printf("xMax = %i, yMax = %i\n", xMax, yMax);
-	int checkX = 0;
-	int checkY = 0;
-	//angles is x and y size = 1024
-	std::vector<Angles> jitterData;
-	for (int i = 0; i < xMax; i++) {
-		for (int j = 0; j < yMax; j++) {
-			jitterData.push_back(samples[i][j]);
-		}
-	}
-	
-	optix::Buffer jitterBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, xMax, yMax);
-	jitterBuffer->setElementSize(sizeof(Angles));
-	jitterBuffer->setSize(xMax, yMax);
-	void* jitterLoc = jitterBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(jitterLoc, jitterData.data(), sizeof(Angles)*(xMax * yMax));
-	jitterBuffer->unmap();
-	renderer.getContext()["jitter_buffer"]->setBuffer(jitterBuffer);
-
-	std::vector<Angles> referenceData;
-	for (int i = 0; i < width; i++) {
-		for (int j = 0; j < height; j++) {
-			Angles temp;
-			temp.x = reference[i][j].real();
-			temp.y = reference[i][j].imag();
-			referenceData.push_back(temp);
-		}
-	}
-	
-	optix::Buffer referenceBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, width, height);
-	referenceBuffer->setElementSize(sizeof(Angles));
-	referenceBuffer->setSize(width, height);
-	void* referenceLoc = referenceBuffer->map(0, RT_BUFFER_MAP_WRITE_DISCARD);
-	memcpy(referenceLoc, referenceData.data(), sizeof(Angles)*(width * height));
-	referenceBuffer->unmap();
-	renderer.getContext()["reference_buffer"]->setBuffer(referenceBuffer);
-	printf("colour =%f\n", node->getColour()[0]);
-	printf("-----------\n");
-	programCreator.createProgramVariable1i("rayGeneration", "checkX", checkX);
-	programCreator.createProgramVariable1i("rayGeneration", "checkY", checkY);
-	
-	
+	renderer.createGeoBuffer<Point>(sphere, "pointBuffer",pointVector, pointVector.size(), 0);
+	renderer.createGeoBuffer<double>(sphere, "radiusBuffer", node->getTransRadius(), node->getTransRadius().size(), 0);
+	renderer.createGeoBuffer<double>(sphere, "colour_buffer", node->getColour(), node->getColour().size(), 0);
 	sphere->setBoundingBoxProgram(boundBox);
 	sphere->setIntersectionProgram(intersectProg);
-	sphere["radiusBuffer"]->setBuffer(radiusBuffer);
-	sphere["pointBuffer"]->setBuffer(pointBuffer);
-	sphere["colour_buffer"]->setBuffer(colourBuffer);
 	sphere->setPrimitiveCount(node->getLightPoints().size());
-
 	optix::Material material = renderer.getContext()->createMaterial();
 	material->setClosestHitProgram(0, closeHitProg);
 
@@ -838,7 +798,7 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	sphereInstance->setGeometry(sphere);
 	sphereInstance->setMaterialCount(1);
 	sphereInstance->setMaterial(0, material);
-	
+
 	optix::Acceleration acceleration = renderer.getContext()->createAcceleration("Trbvh");
 	optix::GeometryGroup group = renderer.getContext()->createGeometryGroup();
 	group->setAcceleration(acceleration);
@@ -847,24 +807,44 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 
 	rootGroup->setChildCount(1);
 	rootGroup->setChild(0, group);
+	printf("xMax = %i, yMax = %i\n", xMax, yMax);
+	int checkX = 229;
+	int checkY = 55;
+	//angles is x and y size = 1024
+	programCreator.createProgramVariable1i("rayGeneration", "checkX", checkX);
+	programCreator.createProgramVariable1i("rayGeneration", "checkY", checkY);
+	printf("-----------\n");
+	
+
+	
 	printf("rendering\n");
+	std::chrono::milliseconds prev();
 	renderer.render(0);
+	
 	printf("rendering complete! :D\n");
 
-
-	void* outputData = renderer.getContext()[outputBuffer]->getBuffer()->map();
-	float* mappedData = new float[4*width*height];
-	memcpy(mappedData, outputData, sizeof(float)*4 * width * height);
+	const void* outputData = renderer.getContext()[outputBuffer]->getBuffer()->map(0, RT_BUFFER_MAP_READ);
+	optix::float2* mappedData = new optix::float2[width*height];
+	std::memmove(mappedData, outputData, sizeof(optix::float2) * width * height);
 	renderer.getContext()[outputBuffer]->getBuffer()->unmap();
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			pattern->add(i, j, mappedData[width * j * 4 + i * 4]);
+			float real = mappedData[width * j + i].x;
+			float imag = mappedData[width * (j) + i].y;
+			if (i == checkX && j == checkY) {
+				printf("real = %f, imag = %f\n", real, imag);
+			}
+			std::complex<double> complexNum(real, imag);
+			double result = abs(complexNum * conj(reference[i][j]));
+			pattern->add(i, j, result);
 		}
 		
 	}
-	
+	delete[] mappedData;
 	renderer.cleanUp();
-
+	std::string input;
+	std::cout << "Render Time " <<  std::endl << "Type and enter to continue." << std::endl;
+	std::cin >> input;
 }
 
 

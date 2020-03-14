@@ -14,20 +14,27 @@ Renderer::Renderer(int width, int height, int rayCount, int entryPoints, int sta
 	context->setStackSize(stackSize);
 }
 
-void Renderer::createBuffer(std::string bufferName) {
-	optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT | RT_BUFFER_GPU_LOCAL, RT_FORMAT_FLOAT4, WIDTH, HEIGHT);
+void Renderer::createBuffer(std::string bufferName, int elementSize) {
+	optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT | RT_BUFFER_GPU_LOCAL, RT_FORMAT_FLOAT2, WIDTH, HEIGHT);
 	context[bufferName]->set(buffer);
 }
-
 
 void Renderer::render(int entryPoints) {
 	try {
 		context->validate();
+		
+	}
+	catch (optix::Exception e) {
+		std::cout << "Validate failed: " << e.getErrorString() << std::endl;
+	}
+
+	try {
 		context->launch(entryPoints, WIDTH, HEIGHT);
 	}
 	catch (optix::Exception e) {
 		std::cout << e.getErrorString() << std::endl;
 	}
+
 }
 
 void Renderer::display(int* argc, char* argv[], std::string outputBufferName) {

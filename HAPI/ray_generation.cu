@@ -2,6 +2,7 @@
 #include <optixu/optixu_math_namespace.h>
 #include <stdio.h>
 #include <thrust/complex.h>
+#include <cuComplex.h>
 struct Angle {
 	double x;
 	double y;
@@ -19,7 +20,8 @@ struct Payload {
 
 };
 
-rtBuffer<float4, 2> result_buffer;
+
+rtBuffer<optix::float2, 2> result_buffer;
 rtBuffer<Angle, 2> jitter_buffer;
 rtBuffer<Angle, 2 > reference_buffer;
 
@@ -59,23 +61,6 @@ for (i = 0; i < sx; i++) {
 	}
 }
 */
-static __device__ __inline__
-thrust::complex<float> computeReference() {
-	double nx = 0.1;
-	double ny = 0.1;
-	double nz = 0.95;
-	double z = 100000.0;
-	float3 pos;
-	pos.x = theLaunchIndex.x * sizex + left;
-	pos.y = theLaunchIndex.y * sizey - top;
-	pos.z = z;
-	float3 nVal;
-	nVal.x = nx;
-	nVal.y = ny;
-	nVal.z = nz;
-	thrust::complex<float> number(0.0f,k * optix::dot(pos, nVal));
-	return thrust::exp<float>(number);
-}
 
 RT_PROGRAM void rayGeneration() {
 	double x = left + theLaunchIndex.x * sizex;
@@ -94,7 +79,7 @@ RT_PROGRAM void rayGeneration() {
 	//Compute the reference of the sphere
 	thrust::complex<double> reference((float)reference_buffer[theLaunchIndex].x, (float)reference_buffer[theLaunchIndex].y);
 	//NOTE: thrust::complex example(realNumber, ImagNumber);
-	thrust::complex<double> finalComplex(0.0, 0.0);
+	thrust::complex<float> finalComplex(0.0, 0.0);
 
 	optix::Ray currentRay;
 	currentRay.origin.x = x;
@@ -122,21 +107,25 @@ RT_PROGRAM void rayGeneration() {
 			
 			rtTrace(sysTopObject, currentRay, payload);
 			if (payload.t >= 0.0) {
-				
 				payload.t -= camDist;
+				
 				thrust::complex<float> complexNum(0.0, (float)(k * payload.t));
 				complexNum = thrust::exp<float>(complexNum);
-				complexNum *= thrust::complex<float>((float)payload.colour.x,0.0);
-				complexNum /= thrust::complex <float> ((float)payload.t, 0.0);
-				
+
+				thrust::complex<float> testDouble = thrust::exp<float>(complexNum);
+
+				thrust::complex<float> complexColour = thrust::complex<double>((float)payload.colour.x, 0.0);
+
+				complexNum = complexColour * complexNum / thrust::complex<float>((float) payload.t, 0.0);
+
+	
 				finalComplex += complexNum;
 				
 			}
 		}
 	}
 	
-	finalComplex *= thrust::conj<float>(reference);
-	resultColour = make_float3((float)thrust::abs(finalComplex));
-	result_buffer[theLaunchIndex] = make_float4(resultColour.x,resultColour.y,resultColour.z, 1.0f);
+	result_buffer[theLaunchIndex].x = finalComplex.real();
+	result_buffer[theLaunchIndex].y = finalComplex.imag();
 	
 }

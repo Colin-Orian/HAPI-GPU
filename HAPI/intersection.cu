@@ -59,9 +59,10 @@ RT_PROGRAM void intersect_sphere(int primitiveIndex) {
 		if (t1 > 0.0) {
 			finalT = t1;
 		}
-		else if (t2 > 0.0) {
+		if (t2 > 0.0f && t2 < t1) {
 			finalT = t2;
 		}
+
 		if (rtPotentialIntersection(finalT)) {
 			payload.t = finalT;
 			
@@ -74,7 +75,6 @@ RT_PROGRAM void intersect_sphere(int primitiveIndex) {
 			nz /= len;
 			diff = nx * lx + ny * ly + nz * lz;
 			if(diff < 0.0) {
-
 				diff = 0.0;
 			}
 			colour = colour_buffer[primitiveIndex];

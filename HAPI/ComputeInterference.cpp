@@ -722,23 +722,23 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 
 	std::string outputBuffer = "result_buffer";
 	Renderer renderer(width, height, rayCount, entryPoint, 800);
-	renderer.getContext()->setPrintEnabled(true); //Allow printing from the GPU
-	renderer.getContext()->setExceptionEnabled(RT_EXCEPTION_ALL, true);
+	renderer.getContext()->setPrintEnabled(false); //Allow printing from the GPU
+	renderer.getContext()->setExceptionEnabled(RT_EXCEPTION_ALL, false);
 	optix::Acceleration rootAcceleration = renderer.getContext()->createAcceleration("Trbvh");
 	optix::Group rootGroup = renderer.getContext()->createGroup();
 	rootGroup->setAcceleration(rootAcceleration);
 	renderer.getContext()["sysTopObject"]->set(rootGroup);
 	ProgramCreator programCreator(renderer.getContext());
 
-	
+	//Create all the PTX programs
 	programCreator.createRaygenProgram("ray_generation.ptx", "rayGeneration", 0);
 	programCreator.createMissProgram("miss.ptx", "miss", 0);
 	programCreator.createExceptionProgram("exception.ptx", "exception", 0);
-	
 	optix::Program boundBox = programCreator.createProgram("bounding_box.ptx", "boundbox_sphere");
 	optix::Program intersectProg = programCreator.createProgram("intersection.ptx", "intersect_sphere");
 	optix::Program closeHitProg = programCreator.createProgram("closest_hit.ptx", "closestHit");
 
+	//Load the program variables, similiar to uniform variables
 	programCreator.createProgramVariable1f("rayGeneration", "left", (float)left);
 	programCreator.createProgramVariable1f("rayGeneration", "top", (float)top);
 	programCreator.createProgramVariable1f("rayGeneration", "sizex", (float)sizex);
@@ -750,7 +750,12 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	programCreator.createProgramVariable1i("rayGeneration", "yMax", yMax);
 	
 
-	renderer.createBuffer(outputBuffer, 0);
+
+	std::cout << "Left = " << left << " top = " << top << " sizex = "  << sizex << "sizey =" << sizey << std::endl;
+
+	//Create the jitter buffer
+	renderer.createOutputBuffer<Angles>(outputBuffer, width, height);
+	renderer.createOutputBuffer<int>("intersect_count", width, height);
 	std::vector<Angles> jitterData;
 	for (int i = 0; i < xMax; i++) {
 		for (int j = 0; j < yMax; j++) {
@@ -759,20 +764,11 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	}
 	renderer.createInputBuffer<Angles>("jitter_buffer", jitterData, xMax, yMax);
 
-	std::vector<Angles> referenceData;
-	for (int i = 0; i < width; i++) {
-		for (int j = 0; j < height; j++) {
-			Angles temp;
-			temp.x = reference[i][j].real();
-			temp.y = reference[i][j].imag();
-			referenceData.push_back(temp);
-		}
-	}
-	renderer.createInputBuffer<Angles>("reference_buffer", referenceData, width, height);
 
+
+	//Create the point buffer. Pointers to points results in some difficulties when trying to create a buffer
 	optix::Geometry sphere;
 	sphere = renderer.getContext()->createGeometry();
-	optix::Buffer pointBuffer = renderer.getContext()->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER);
 	std::vector<Point> pointVector;
 	for (Point* point : node->getLightPoints()) {
 		double x = point->x;
@@ -784,12 +780,14 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 		temp.z = z;
 		pointVector.push_back(temp);
 	}
-
 	renderer.createGeoBuffer<Point>(sphere, "pointBuffer",pointVector, pointVector.size(), 0);
 	renderer.createGeoBuffer<double>(sphere, "radiusBuffer", node->getTransRadius(), node->getTransRadius().size(), 0);
 	renderer.createGeoBuffer<double>(sphere, "colour_buffer", node->getColour(), node->getColour().size(), 0);
+
+
 	sphere->setBoundingBoxProgram(boundBox);
 	sphere->setIntersectionProgram(intersectProg);
+
 	sphere->setPrimitiveCount(node->getLightPoints().size());
 	optix::Material material = renderer.getContext()->createMaterial();
 	material->setClosestHitProgram(0, closeHitProg);
@@ -823,27 +821,41 @@ void computeInterferenceParallel(GeometryNode * node, InterferencePattern * patt
 	
 	printf("rendering complete! :D\n");
 
+	//Mapp the results back onto the CPU
 	const void* outputData = renderer.getContext()[outputBuffer]->getBuffer()->map(0, RT_BUFFER_MAP_READ);
-	optix::float2* mappedData = new optix::float2[width*height];
-	std::memmove(mappedData, outputData, sizeof(optix::float2) * width * height);
+	Angles* mappedData = new Angles[width*height];
+	std::memmove(mappedData, outputData, sizeof(Angles) * width * height);
 	renderer.getContext()[outputBuffer]->getBuffer()->unmap();
+
+	//Used to see how many intersections we had
+	const void* countBuffer = renderer.getContext()["intersect_count"]->getBuffer()->map(0, RT_BUFFER_MAP_READ);
+	int* countData = new int[width * height];
+	std::memmove(countData, countBuffer, sizeof(int) * width * height);
+	renderer.getContext()["intersect_count"]->getBuffer()->unmap();
+
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
 			float real = mappedData[width * j + i].x;
 			float imag = mappedData[width * (j) + i].y;
-			if (i == checkX && j == checkY) {
-				printf("real = %f, imag = %f\n", real, imag);
-			}
 			std::complex<double> complexNum(real, imag);
 			double result = abs(complexNum * conj(reference[i][j]));
 			pattern->add(i, j, result);
+
+			intersections += countData[width * j + i];
 		}
 		
 	}
+
 	delete[] mappedData;
+	delete[] countData;
 	renderer.cleanUp();
 	std::string input;
-	std::cout << "Render Time " <<  std::endl << "Type and enter to continue." << std::endl;
+
+	maxInter = xMax * yMax;
+	maxInter = maxInter * width*height;
+	printf("Intersections: %ld Max Intersections: %ld Percent Intersected: %f\n", intersections, maxInter, ((double)intersections) / maxInter);
+
+	std::cout << "Type and enter to continue." << std::endl;
 	std::cin >> input;
 }
 
@@ -930,7 +942,7 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 	for (i = 0; i < width; i++)
 		for (j = 0; j < height; j++)
 			object[i][j] = 0.0;
-	
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	for (i = 0; i < width; i++) {    
 		for (j = 0; j < height; j++) {
 			//For each pixel do this stuff
@@ -962,14 +974,20 @@ void computeInterferenceRay(GeometryNode *node, InterferencePattern *pattern, do
 					intersections++;
 					t -= d;
 					object[i][j] += colour*exp(1i*k*t)/t;
-					if (i == 100 && j == 100) {
-						std::cout << object[i][j] << std::endl;
-					}
 				}
 			}
 
 		}
 	}
+
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+
+	std::cout << "It took me " << time_span.count() << " seconds to render.";
+	std::cout << std::endl;
+	std::cout << "Press a button and hit enter to continue: ";
+	std::string input;
+	std::cin >> input;
 	for (i = 0; i < width; i++) {
 		for (j = 0; j < height; j++) {
 			intens = abs(object[i][j] * conj(reference[i][j]));

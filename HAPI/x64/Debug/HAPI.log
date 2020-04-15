@@ -1,5 +1,16 @@
-﻿  ComputeInterference.cpp
-d:\projects\hapiex\hapi\computeinterference.cpp(112): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\projects\hapiex\hapi\computeinterference.cpp(160): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-d:\projects\hapiex\hapi\computeinterference.cpp(195): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  HAPI.vcxproj -> D:\projects\HAPIex\x64\Debug\HAPI.lib
+﻿  HAPI.cpp
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\hapi.cpp(100): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\hapi.cpp(102): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\string.h(133): note: see declaration of 'strcpy'
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\hapi.cpp(255): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(1774): note: see declaration of 'sprintf'
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\hapi.cpp(272): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(1774): note: see declaration of 'sprintf'
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\hapi.cpp(276): warning C4715: 'display': not all control paths return a value
+freeglut.lib(freeglut.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+freeglut.lib(freeglut.dll) : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+glu32.lib(GLU32.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+glu32.lib(GLU32.dll) : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+sutil_sdk.lib(sutil_sdk.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+sutil_sdk.lib(sutil_sdk.dll) : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+  HAPI.vcxproj -> C:\Users\Colin\Documents\schoolWork\seniorThesis\hapiGPU\x64\Debug\HAPI.lib

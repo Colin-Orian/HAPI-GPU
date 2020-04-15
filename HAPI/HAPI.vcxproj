@@ -131,7 +131,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\boost;D:\projects\FreeImage\FreeImage3180Win32Win64\FreeImage\Dist\x64</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\include\optixu;C:\Users\Colin\Documents\schoolWork\seniorThesis\hapiGPU\include;C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

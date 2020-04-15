@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 		int ry;
 	};
 	struct Settings settings[] = {
-		0.1, 1.0, 25, 25,
+		0.1, 1.0, 25, 25, //actual
 		0.4, 1.0, 25, 25,
 //		0.2, 1.0, 299, 299
 	};
@@ -98,7 +98,6 @@ int main(int argc, char **argv) {
 	*/
 	tnode = new TransformationNode();
 	tnode->rotateZ(0.0);
-
 	/*
 	*  Link up the nodes in the scene graph
 	*/
@@ -112,6 +111,16 @@ int main(int argc, char **argv) {
 //	setres(199, 199);
 //	setrho(0.1);
 //	setnoise(1.0);
+	bool isParallel;
+	std::cout << "Parallel -> 1 \nSerial ->2 \nInput: ";
+	int choice;
+	std::cin >> choice;
+	if (choice == 1) {
+		isParallel = true;
+	}
+	else {
+		isParallel = false;
+	}
 	printf("settings: %d\n", NSettings);
 	for (i = 0; i<NSettings; i++) {
 		printf("===================================================\n");
@@ -124,7 +133,7 @@ int main(int argc, char **argv) {
 		sprintf(buffer, "setting%d", i);
 //		sprintf(buffer, "hiddenr");
 		setBaseFileName(buffer);
-		display(node);
+		display(node, isParallel);
 //		tnode->rotateZ(0.1);
 	}
 	printf("total time: %f\n", getSeconds() - t1);

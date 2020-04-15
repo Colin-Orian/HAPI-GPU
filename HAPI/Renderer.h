@@ -9,12 +9,13 @@
 #include <string>
 #include <iostream>
 #include <map>
-
+#include <chrono>
 #include "ProgramCreator.h"
 class Renderer {
 private:
 	int WIDTH;
 	int HEIGHT;
+	unsigned int bytesUsed;
 	optix::Context context;
 
 public:
@@ -44,6 +45,8 @@ public:
 		buffer->setElementSize(sizeof(T));
 		buffer->setSize(width, height);
 		context[bufferName]->setBuffer(buffer);
+		unsigned int bufferBytes = sizeof(T) * width * height;
+		this->bytesUsed += bufferBytes;
 	}
 
 	template<typename T>
@@ -55,6 +58,9 @@ public:
 		memcpy(buffLoc, data.data(), sizeof(T)*width*height);
 		buffer->unmap();
 		context[bufferName]->setBuffer(buffer);
+
+		unsigned int bufferBytes = sizeof(T) * width * height;
+		this->bytesUsed += bufferBytes;
 	}
 
 	template<typename T>
@@ -66,5 +72,8 @@ public:
 		memcpy(buffLoc, data.data(), sizeof(T) * width);
 		buffer->unmap();
 		geo[bufferName]->setBuffer(buffer);
+
+		unsigned int bufferBytes = sizeof(T) * width * 1;
+		this->bytesUsed += bufferBytes;
 	}
 };

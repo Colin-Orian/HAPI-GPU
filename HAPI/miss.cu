@@ -3,8 +3,9 @@
 struct Payload {
 	float3 colour;
 	double diff;
-
+	double t;
 };
+
 rtDeclareVariable(Payload, payload, rtPayload, );
 //On a miss, make the pixel green
 RT_PROGRAM void miss() {

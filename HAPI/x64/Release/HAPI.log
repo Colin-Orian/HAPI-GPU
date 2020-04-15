@@ -1,13 +1,52 @@
 ﻿  ComputeInterference.cpp
-d:\projects\hapiex\hapi\computeinterference.cpp(287): warning C4101: 'theta': unreferenced local variable
-d:\projects\hapiex\hapi\computeinterference.cpp(288): warning C4101: 'k1': unreferenced local variable
-d:\projects\hapiex\hapi\computeinterference.cpp(468): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\projects\hapiex\hapi\computeinterference.cpp(771): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%lld' in the format string
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%Id' in the format string
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%I64d' in the format string
-d:\projects\hapiex\hapi\computeinterference.cpp(771): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 2 has type '__int64'
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%lld' in the format string
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%Id' in the format string
-  d:\projects\hapiex\hapi\computeinterference.cpp(771): note: consider using '%I64d' in the format string
-  HAPI.vcxproj -> D:\projects\HAPIex\x64\Release\HAPI.lib
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(295): warning C4101: 'theta': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(296): warning C4101: 'k1': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(476): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(748): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(783): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(784): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(785): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(791): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(838): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(839): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%lld' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%Id' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%I64d' in the format string
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 2 has type '__int64'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%lld' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%Id' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(856): note: consider using '%I64d' in the format string
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(673): warning C4101: 'm': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(664): warning C4101: 'len': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(663): warning C4101: 'dz': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(674): warning C4101: 'ray': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(679): warning C4101: 'colour': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(663): warning C4101: 'dy': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(661): warning C4101: 'y': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(661): warning C4101: 'x': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(660): warning C4101: 'j': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(660): warning C4101: 'i': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(680): warning C4101: 'intens': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(675): warning C4101: 't': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(673): warning C4101: 'n': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(663): warning C4101: 'dx': unreferenced local variable
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(819): warning C4930: 'std::chrono::milliseconds prev(void)': prototyped function not called (was a variable definition intended?)
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): warning C4477: 'printf' : format string '%zd' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'int'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): note: consider using '%d' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): note: consider using '%I32d' in the format string
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): warning C4477: 'printf' : format string '%zd' requires an argument of type 'unsigned __int64', but variadic argument 2 has type 'int'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): note: consider using '%d' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(916): note: consider using '%I32d' in the format string
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%lld' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%Id' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%I64d' in the format string
+c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 2 has type '__int64'
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%lld' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%Id' in the format string
+  c:\users\colin\documents\schoolwork\seniorthesis\hapigpu\hapi\computeinterference.cpp(999): note: consider using '%I64d' in the format string
+freeglut.lib(freeglut.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+glu32.lib(GLU32.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+sutil_sdk.lib(sutil_sdk.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in optix.6.0.0.lib(optix.6.0.0.dll); second definition ignored
+  HAPI.vcxproj -> C:\Users\Colin\Documents\schoolWork\seniorThesis\hapiGPU\x64\Release\HAPI.lib

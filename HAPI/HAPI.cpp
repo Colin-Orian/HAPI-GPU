@@ -178,7 +178,7 @@ void passOne(Node *root, double initialCtm[4][4]) {
 			if (((StaticNode*)current)->isDirty()) {
 				pat = new InterferencePattern();
 				stack.push(ctm);
-				traverse(current, pat, ctm);
+				traverse(current, pat, ctm, false);
 				stack.pop(ctm);
 				((StaticNode*)current)->setInterferencePattern(*pat);
 			}
@@ -226,13 +226,11 @@ void passTwo(Node *root, InterferencePattern* pattern, bool isParallel) {
 	}
 }
 
-void traverse(Node *root, InterferencePattern* pattern, double initialCtm[4][4]) {
-	bool isParallel = true;
+void traverse(Node *root, InterferencePattern* pattern, double initialCtm[4][4], bool isParallel) {
 	/*
 	 *  first pass - convert all the geometry
 	 *  to point light sources
 	 */
-
 	passOne(root, initialCtm);
 
 	/*
@@ -244,13 +242,13 @@ void traverse(Node *root, InterferencePattern* pattern, double initialCtm[4][4])
 
 }
 
-void display(Node *root) {
+void display(Node *root, bool isParallel) {
 	double ctm[4][4];
 	InterferencePattern *pattern = new InterferencePattern();
 	char buffer[256];
 
 	identity(ctm);
-	traverse(root, pattern, ctm);
+	traverse(root, pattern, ctm, isParallel);
 
 	if(myTarget == FILE) {
 		sprintf(buffer,"%s.bmp",baseFileName);
@@ -259,13 +257,13 @@ void display(Node *root) {
 
 }
 
-InterferencePattern* display(Node *root, int mode) {
+InterferencePattern* display(Node *root, int mode, bool isParallel) {
 	InterferencePattern *pattern = new InterferencePattern();
 	double ctm[4][4];
 	char buffer[256];
 
 	identity(ctm);
-	traverse(root, pattern, ctm);
+	traverse(root, pattern, ctm, isParallel);
 
 	if(mode == COMPUTE)
 		return(pattern);

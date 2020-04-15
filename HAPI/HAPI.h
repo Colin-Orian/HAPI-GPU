@@ -16,7 +16,7 @@
 #include "InterferencePattern.h"
 #include "StaticNode.h"
 #include "Renderer.h"
-
+#include <chrono>
 //  Channels
 
 #define RED		1
@@ -51,10 +51,10 @@ void setDeviceSpace(double x1, double y1, double z1, double x2, double y2, doubl
 void setAlgorithm(int algorithm);
 int getAlgorithm();
 void passTwo(Node * root, InterferencePattern * pattern, bool isParallel);
-void traverse(Node *tree, InterferencePattern* pattern, double ctm[4][4]);
+void traverse(Node *tree, InterferencePattern* pattern, double ctm[4][4], bool isParallel);
 void compile(GeometryNode *node, double ctm[4][4]);
 void computeInterference(GeometryNode *node, InterferencePattern* pattern, double lambda, double x, double y, double z, bool isParallel);
-void display(Node *root);
-InterferencePattern* display(Node *root, int mode);
+void display(Node *root, bool isParallel);
+InterferencePattern* display(Node *root, int mode, bool isParallel);
 double getSeconds();
 #endif

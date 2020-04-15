@@ -15,6 +15,8 @@ rtDeclareVariable(double, colour, attribute colour, );
 RT_PROGRAM void closestHit() {
 	double ambient = 0.2;
 	double diffuse = 0.8;
-	//colour = 1.0
-	payload.colour = make_float3(diff * diffuse * colour + ambient);
+	double result = diff * diffuse * colour + ambient;
+
+
+	payload.colour = make_float3(result);
 }
